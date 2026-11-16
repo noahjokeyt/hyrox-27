@@ -1,0 +1,17 @@
+{
+  "name": "Hyrox Toulouse 27",
+  "short_name": "Hyrox 27",
+  "description": "Plan d'entraînement Hyrox sur 12 semaines : séances, minuteurs, suivi.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080a12",
+  "theme_color": "#080a12",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
