@@ -39,8 +39,8 @@ button,input,textarea{font:inherit;color:inherit}
 #top .sync.err b{background:var(--co)}
 #main{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 24px;-webkit-overflow-scrolling:touch}
 #tbar{padding:0 12px}
-#tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:rgba(8,10,18,.94);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
-#tabs button{background:none;border:0;padding:8px 0 4px;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;min-height:52px}
+#tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:rgba(8,10,18,.94);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+#tabs button{background:none;border:0;padding:8px 0 4px;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;letter-spacing:.02em;text-transform:uppercase;min-height:52px;white-space:nowrap}
 #tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs button.on{color:var(--cy)}
 h1,h2,h3{margin:0;font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;text-wrap:balance}
@@ -147,6 +147,40 @@ svg.ch text{font-family:var(--body);font-size:9.5px;fill:var(--mu)}
 .note{font-size:14px;color:var(--mu)}
 .tag{font-size:13px;color:var(--mu)}
 a{color:var(--cy)}
+.gtoc{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.gtoc button{border:1px solid var(--line);background:var(--s1);border-radius:99px;padding:9px 14px;font-size:14px;font-weight:600;min-height:40px}
+.gsec{background:var(--s1);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;overflow:hidden}
+.gsec[open]{border-color:#34406e}
+.gsec summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px;min-height:62px;cursor:pointer}
+.gsec summary::-webkit-details-marker{display:none}
+.gk{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--vi);width:26px}
+.gt{flex:1;font-family:var(--disp);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.02em;line-height:1.05}
+.gc::before{content:"+";font-size:24px;color:var(--mu)}
+.gsec[open] .gc::before{content:"−"}
+.gb{padding:0 14px 14px}
+.gp{margin:8px 0;color:#cfd5f2;line-height:1.5}
+.gh{font-size:17px;color:var(--cy);margin:18px 0 8px;letter-spacing:.06em}
+.gex{background:var(--s2);border-radius:14px;padding:14px;margin:12px 0}
+.gex h3{font-size:21px}
+.gmeta{color:var(--am);font-size:14px;font-weight:600;margin:2px 0 6px}
+.glab{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:10px 0 4px}
+.gol,.gul{margin:0;padding-left:20px;line-height:1.5;color:#dfe3fa}
+.gol li,.gul li{margin:5px 0}
+.gol.big li{margin:9px 0}
+.gtip{margin-top:10px;padding:10px 12px;border-left:3px solid var(--cy);background:rgba(39,224,255,.07);border-radius:0 10px 10px 0;font-size:15px;line-height:1.45}
+.gtw{overflow-x:auto;margin:8px 0}
+.gtab{width:100%;border-collapse:collapse;font-size:14.5px}
+.gtab th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);padding:6px 8px;border-bottom:1px solid var(--line)}
+.gtab td{padding:8px;border-bottom:1px solid #1d2238;vertical-align:top;font-variant-numeric:tabular-nums}
+.qbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);color:var(--cy);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600;min-height:36px}
+.exh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+@media print{
+  #top,#tabs,#tbar,#ov,#toast,.noprint,.gtoc,.back{display:none!important}
+  html,body,#app,#main{background:#fff!important;color:#000!important;height:auto!important;overflow:visible!important}
+  .gsec,.gex,.card{background:#fff!important;border:1px solid #bbb!important;break-inside:avoid}
+  .gp,.gol,.gul,.gtab td,.gt,.gtip{color:#000!important}
+  .hero .cd,.hero h1{color:#000!important;-webkit-text-fill-color:#000}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -196,7 +230,7 @@ function fnum(v){return String(v).replace('.',',');}
 /* ---------- état ---------- */
 function defaults(){return {v:1,updatedAt:0,settings:{race:'2027-02-06',start:'2026-11-16',base5k:'25:00',sound:true,autoRest:true,wake:true,bgAudio:true},logs:{}};}
 var S=defaults();
-var UI={tab:'today',sess:null,open:{},scroll:0};
+var UI={tab:'today',sess:null,open:{},scroll:0,gOpen:{},gReturn:null};
 var T=null;
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
@@ -207,10 +241,10 @@ function normalize(r){var d=defaults();if(!r||typeof r!=='object')return d;
   d.logs=r.logs||{};return d;}
 function load(){
   try{var a=lsGet(LS_KEY);if(a)S=normalize(JSON.parse(a));}catch(e){}
-  try{var b=lsGet(LS_UI);if(b){var u=JSON.parse(b);UI.tab=u.tab||'today';UI.sess=u.sess||null;UI.open=u.open||{};}}catch(e){}
+  try{var b=lsGet(LS_UI);if(b){var u=JSON.parse(b);UI.tab=u.tab||'today';UI.sess=u.sess||null;UI.open=u.open||{};UI.gOpen=u.gOpen||{};}}catch(e){}
   try{var c=lsGet(LS_TIMER);if(c){var t=JSON.parse(c);if(t&&(Date.now()-t.startAt)/1000<t.total+30)T=t;}}catch(e){}
 }
-function saveUI(){lsSet(LS_UI,JSON.stringify({tab:UI.tab,sess:UI.sess,open:UI.open}));}
+function saveUI(){lsSet(LS_UI,JSON.stringify({tab:UI.tab,sess:UI.sess,open:UI.open,gOpen:UI.gOpen}));}
 function touch(){S.updatedAt=Date.now();lsSet(LS_KEY,JSON.stringify(S));remoteSave();}
 
 /* ---------- allures ---------- */
@@ -269,6 +303,7 @@ function stText(st){
   var s=STN[st.i],t=s.n+' '+(st.half?s.half:s.full),l=loadStr(s.ld,st.pct);
   return l?t+' · '+l:t;
 }
+var STG={'SkiErg':'g-ski','Sled push':'g-push','Sled pull':'g-pull',"Farmer's carry":'g-farm','Fentes lestées':'g-lunge','Wall balls':'g-wb','Burpee broad jumps':'g-bbj','Rameur':'g-rower'};
 var CIRC=[
   ['SkiErg','250 m',null],['Sled push','2×25 m','push'],['Sled pull','2×25 m','pull'],
   ["Farmer's carry",'2×50 m','farm'],['Fentes lestées','25 m','lunge'],['Wall balls','20 reps','wb'],['Burpee broad jumps','20 m',null]
@@ -709,6 +744,7 @@ function vSession(){
   h+='<button class="back" data-a="back">← Retour</button>';
   h+='<section class="sess" style="--ac:'+colVar(s.col)+'"><div class="row"><span class="chip" style="color:'+colVar(s.col)+'">'+esc(DAYN[day])+' '+fmtD(dayDate(w,day))+'</span>'+phChip(s.ph)+'</div><h1>'+esc(s.title)+'</h1><div class="tag">'+esc(s.sub)+' · Semaine '+w+'</div>';
   if(isTrain(s)&&s.type!=='free')h+=kpis(s);
+  h+='<button class="qbtn" data-a="guide" data-g="'+guideFor(s)+'" style="margin-top:10px">? Comment faire cette séance</button>';
   h+='</section>';
   var ty=s.type;
   if(ty==='force')h+=sForce(s,l);
@@ -745,7 +781,7 @@ function sForce(s,l){
   var h='<h2>Exercices</h2><div class="card"><span class="lbl" style="text-align:left">Lancer un repos</span>'+restBtns()+'</div>';
   FORCE_EX.forEach(function(e,i){
     var rows=l.data.ex[e.id]||[],last=lastEx(e.id,s.w);
-    h+='<div class="card ex" style="margin-top:12px"><h3>'+esc(e.name)+'</h3><div class="meta">'+s.sets[i]+' × '+esc(e.reps)+(e.rpe?' · RPE '+e.rpe:'')+' · repos '+fmtT(e.rest)+(e.note?' · '+esc(e.note):'')+'</div>';
+    h+='<div class="card ex" style="margin-top:12px"><div class="exh"><h3>'+esc(e.name)+'</h3><button class="qbtn" data-a="guide" data-g="g-'+e.id+'" aria-label="Technique : '+esc(e.name)+'">?</button></div><div class="meta">'+s.sets[i]+' × '+esc(e.reps)+(e.rpe?' · RPE '+e.rpe:'')+' · repos '+fmtT(e.rest)+(e.note?' · '+esc(e.note):'')+'</div>';
     if(last)h+='<div class="prev">Dernière fois (S'+last.w+') : '+fnum(last.kg)+' kg × '+last.reps+'</div>';
     h+='<div class="set" style="margin-top:6px"><span></span><span class="lbl">kg</span><span class="lbl">'+(e.unit==='s'?'secondes':'reps')+'</span><span></span></div>';
     rows.forEach(function(r,k){
@@ -778,7 +814,7 @@ function sCircuit(s,l){
   for(var t=0;t<s.tours;t++){
     var x=l.data.c[t]||{t:'',d:false};
     h+='<div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><h3>Tour '+(t+1)+'</h3><span class="tag">'+(x.d?'Terminé':'À faire')+'</span></div><div class="list" style="margin:6px 0 10px">';
-    CIRC.forEach(function(c){h+='<div class="li" style="min-height:44px;padding:8px 2px"><span class="tt"><b>'+esc(c[0])+'</b></span><span class="num">'+esc(c[1])+(c[2]?' · '+esc(loadStr(c[2],s.pct)):'')+'</span></div>';});
+    CIRC.forEach(function(c){h+='<button class="li" data-a="guide" data-g="'+STG[c[0]]+'" style="min-height:44px;padding:8px 2px"><span class="tt"><b>'+esc(c[0])+' <span class="c-cy">?</span></b></span><span class="num">'+esc(c[1])+(c[2]?' · '+esc(loadStr(c[2],s.pct)):'')+'</span></button>';});
     h+='</div><div class="rrow" style="grid-template-columns:1fr 96px 64px"><span class="rinfo"><small>Temps du tour</small></span><input class="in" inputmode="numeric" data-f="c.'+t+'.t" value="'+esc(x.t)+'" placeholder="mm:ss" aria-label="Temps du tour '+(t+1)+'"><button class="chk '+(x.d?'d':'')+'" data-a="cdone" data-i="'+t+'" aria-label="Valider le tour '+(t+1)+'">✓</button></div></div>';
   }
   return h;
@@ -873,6 +909,330 @@ function vProgress(){
   return h;
 }
 
+/* --- guide --- */
+function gsec(id,kick,title,body){
+  var o=!!UI.gOpen[id];
+  return '<details class="gsec" id="'+id+'"'+(o?' open':'')+'><summary><span class="gk">'+kick+'</span><span class="gt">'+title+'</span><span class="gc" aria-hidden="true"></span></summary><div class="gb">'+body+'</div></details>';
+}
+function gex(id,name,meta,how,avoid,tip){
+  var h='<div class="gex" id="'+id+'"><h3>'+name+'</h3>'+(meta?'<div class="gmeta">'+meta+'</div>':'');
+  h+='<div class="glab c-cy">Comment</div><ol class="gol">'+how.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ol>';
+  if(avoid&&avoid.length)h+='<div class="glab c-co">À éviter</div><ul class="gul">'+avoid.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+  if(tip)h+='<div class="gtip">'+tip+'</div>';
+  return h+'</div>';
+}
+function gtable(head,rows){
+  return '<div class="gtw"><table class="gtab"><thead><tr>'+head.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
+}
+function gp(t){return '<p class="gp">'+t+'</p>';}
+function vGuide(){
+  var A={z2a:pace(1.2),z2b:pace(1.3),tempo:pace(1.033),race:pace(1.05),k1:pace(1.0),fast:pace(0.933),ref:fmtT(P5()*5)};
+  var lt=lastTest();
+  var h='';
+  if(UI.gReturn)h+='<button class="back" data-a="gback">← Retour à la séance</button>';
+  h+='<section class="hero" style="padding-top:6px"><h1 style="font-size:46px;line-height:.95">Le guide</h1><small>Tout ce qu\'il faut savoir avant chaque séance. Les allures sont calées sur '+(lt?'ton test 5 km ('+A.ref+')':'ton 5 km de référence ('+A.ref+')')+'.</small></section>';
+  var toc=[['g-start','Règles'],['g-int','Allures'],['g-warm','Échauffements'],['g-force','Lundi force'],['g-tue','Mardi run'],['g-thu','Jeudi circuit'],['g-st','Stations'],['g-sat','Samedi'],['g-sun','Dimanche Z2'],['g-mob','Récup active'],['g-race','Jour J'],['g-rec','Récupération'],['g-glo','Glossaire']];
+  h+='<div class="gtoc">'+toc.map(function(t){return '<button data-a="gjump" data-g="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>';
+
+  /* 1. règles */
+  h+=gsec('g-start','01','Les règles du plan',
+    '<ol class="gol big">'+
+    '<li><b>Le facile reste facile.</b> Le dimanche et les récupérations se font lentement. C\'est là que ton cardio se reconstruit.</li>'+
+    '<li><b>Jamais à l\'échec en force.</b> Garde toujours 2 à 3 répétitions en réserve (RPE 7-8).</li>'+
+    '<li><b>La course passe avant les stations</b> quand les deux sont le même jour.</li>'+
+    '<li><b>Courbature : ok. Douleur vive ou localisée : stop.</b> Remplace la course par du rameur ou du vélo et préviens-moi.</li>'+
+    '<li><b>Une séance ratée ne se rattrape pas.</b> Reprends simplement le plan au jour prévu.</li></ol>'+
+    '<h3 class="gh">Semaine type</h3>'+
+    gtable(['Jour','Séance','Rôle'],[
+      ['Lun','Force','Garder et consolider ta force'],
+      ['Mar','Run qualité','Faire monter ta vitesse au seuil'],
+      ['Mer','Récup active','Mobilité + marche'],
+      ['Jeu','Circuit stations','Technique et endurance de force'],
+      ['Ven','Récup active','Mobilité + marche'],
+      ['Sam','Spécifique Hyrox','Courir fatigué, enchaîner course et station'],
+      ['Dim','Endurance (Z2)','Construire la base aérobie']])+
+    '<h3 class="gh">Les phases</h3>'+
+    gtable(['Semaines','Phase','Objectif'],[
+      ['1 à 3','Base','Reprendre la course, apprendre les stations'],
+      ['4','Décharge','Volume réduit pour assimiler'],
+      ['5 à 7','Build','Plus de volume et d\'intensité'],
+      ['8','Décharge + test','Récupérer et mesurer tes progrès'],
+      ['9 à 10','Spécifique','Charges réelles, simulations'],
+      ['11','Affûtage','Moins de volume, garder la vitesse'],
+      ['12','Course','Arriver frais le jour J']])
+  );
+
+  /* 2. intensités */
+  h+=gsec('g-int','02','Intensités et allures',
+    gtable(['Zone','Allure /km','Ressenti'],[
+      ['<b class="c-cy">Z2 · endurance</b>',A.z2a+' à '+A.z2b,'Tu parles en phrases complètes'],
+      ['<b class="c-am">Allure course Hyrox</b>',A.race,'Soutenu mais contrôlé, sur 1 km'],
+      ['<b class="c-vi">Tempo / seuil</b>',A.tempo,'« Confortablement dur », phrases courtes'],
+      ['<b class="c-vi">1 km rapide</b>',A.k1,'Ton allure 5 km'],
+      ['<b class="c-co">800 m vite</b>',A.fast,'Dur, quelques mots maximum']])+
+    gp('<b>Fréquence cardiaque Z2</b> : environ 135 à 150 bpm. C\'est indicatif (fréquence max estimée à 196 à 24 ans). Si ton cardio monte au-dessus en Z2, ralentis, même si l\'allure paraît trop lente : c\'est normal au début.')+
+    '<h3 class="gh">L\'échelle RPE</h3>'+
+    gtable(['RPE','Sensation','Réserve'],[
+      ['6','Facile, la charge passe vite','4 reps'],
+      ['7','Ça pousse, vitesse correcte','3 reps'],
+      ['8','Dur, la dernière ralentit','2 reps'],
+      ['9','Très dur','1 rep'],
+      ['10','Échec','0']])+
+    gp('En fin de séance, l\'app te demande un RPE global de 1 à 10 : note l\'effort de la séance entière.')
+  );
+
+  /* 3. échauffements */
+  h+=gsec('g-warm','03','Échauffements',
+    '<h3 class="gh">Avant une séance de course (15 min)</h3><ol class="gol">'+
+    '<li>10 min de footing en Z2.</li>'+
+    '<li><b>Gammes</b>, 2 × 20 m chacune, retour en marchant : montées de genoux, talons-fesses, pas chassés de chaque côté, foulées bondissantes.</li>'+
+    '<li><b>3 lignes droites</b> : 80 m en accélérant progressivement jusqu\'à ton allure de séance, retour en marchant.</li></ol>'+
+    '<h3 class="gh">Avant la force ou le circuit (10 min)</h3><ol class="gol">'+
+    '<li>5 min de rameur ou SkiErg, facile.</li>'+
+    '<li>10 squats au poids du corps, 10 fentes arrière, 10 pompes, 5 tractions faciles.</li>'+
+    '<li><b>Séries de montée en charge</b> sur le premier exercice : 5 reps à ~50 %, 3 reps à ~70 %, 1 à 2 reps à ~85 % de ta charge de travail, puis tu commences.</li></ol>'
+  );
+
+  /* 4. force */
+  h+=gsec('g-force','04','Lundi · Force',
+    gp('6 exercices, repos complet entre les séries (le minuteur se lance quand tu valides). Charge à RPE 7-8 : tu finis chaque série avec 2 à 3 reps en réserve.')+
+    gp('<b>Progression</b> : si toutes tes séries d\'un exercice sont propres et faciles (RPE 7 ou moins), ajoute 2,5 à 5 kg la semaine suivante. L\'app pré-remplit ta dernière charge.')+
+    gex('g-dl','Soulevé de terre trap-bar','4 × 5 · repos 3:00',[
+      'Place-toi au centre de la barre hexagonale, pieds largeur de hanches, poignées alignées avec le milieu du pied.',
+      'Descends en poussant les fesses en arrière et en pliant les genoux. Dos plat, regard 2 m devant toi.',
+      'Serre fort les poignées et descends les épaules loin des oreilles : ton dos se verrouille.',
+      'Pousse le sol avec les jambes. Hanches et épaules montent ensemble. Finis debout, fesses serrées.',
+      'Redescends en 2 secondes et pose la barre sans rebondir.'],
+      ['Dos qui s\'arrondit.','Hanches qui montent avant les épaules (le dos fait tout le travail).','Se pencher en arrière en haut.'],
+      '<b>Charge de départ</b> : tu n\'as pas de repère, donc monte de 10 kg en 10 kg sur des séries de 5 jusqu\'à atteindre RPE 7-8. Sans trap-bar : soulevé de terre roumain aux haltères, 4 × 8.')+
+    gex('g-bss','Fentes bulgares','3 × 8 par jambe · repos 2:00',[
+      'Pied arrière posé sur un banc (lacets vers le bas), un haltère dans chaque main.',
+      'Pied avant assez loin pour que le genou reste au-dessus du pied en bas du mouvement.',
+      'Descends verticalement jusqu\'à ce que le genou arrière frôle le sol, buste légèrement penché.',
+      'Remonte en poussant dans le talon avant. Commence par ta jambe la plus faible.'],
+      ['Genou avant qui rentre vers l\'intérieur.','Rebondir en bas.'],
+      'C\'est l\'exercice qui prépare le mieux aux 100 m de fentes lestées de la course.')+
+    gex('g-pu','Tractions lestées','4 × 6-8 · +5 kg · repos 2:00',[
+      'Ceinture de lest ou haltère tenu entre les pieds.',
+      'Prise en pronation (paumes vers l\'avant), un peu plus large que les épaules.',
+      'Pars bras tendus, épaules engagées (descendues), puis monte jusqu\'à passer le menton au-dessus de la barre.',
+      'Redescends en 2 secondes jusqu\'aux bras tendus.'],
+      ['Balancer les jambes.','Demi-répétitions.'],
+      'Si tu n\'arrives pas à 6 reps lestées, fais-les au poids du corps.')+
+    gex('g-inc','Développé haltères incliné','3 × 8 · repos 1:30',[
+      'Banc incliné à 30°, omoplates serrées et plaquées contre le banc, pieds au sol.',
+      'Descends les haltères au niveau du haut des pectoraux, coudes à environ 45° du corps.',
+      'Pousse vers le haut en rapprochant légèrement les haltères.'],
+      ['Coudes à 90° (épaules en souffrance).','Fesses qui décollent.'],'')+
+    gex('g-row','Rowing haltère','3 × 10 par bras · repos 1:30',[
+      'Main et genou du même côté sur un banc, dos plat parallèle au sol.',
+      'Tire le coude vers la hanche, pas vers le plafond.',
+      'Marque 1 seconde en haut, puis redescends contrôlé.'],
+      ['Tourner le buste pour tricher.'],'')+
+    gex('g-core','Gainage','3 × 40 s · repos 1:00',[
+      '<b>Planche</b> : coudes sous les épaules, corps aligné de la tête aux talons, fesses serrées, respire normalement.',
+      '<b>Ou roue abdominale</b> (8 à 10 reps) : à genoux, fesses serrées, roule vers l\'avant jusqu\'à la limite où le bas du dos commence à se creuser, puis reviens.'],
+      ['Bas du dos qui se creuse.','Bloquer sa respiration.'],
+      'Saisis les secondes tenues dans la colonne « reps ».')
+  );
+
+  /* 5. mardi */
+  h+=gsec('g-tue','05','Mardi · Run qualité',
+    gp('La séance qui fait monter ta vitesse. Échauffement de 15 min obligatoire (voir Échauffements), retour au calme de 10 min en footing très lent.')+
+    gtable(['Format','Allure','Récup'],[
+      ['Tempo 3 à 4 min',A.tempo,'1:30 à 2:00 en trottinant'],
+      ['1 km',A.k1,'1:30 à 2:00'],
+      ['1,5 km / 2 km seuil',pace(1.017)+' / '+A.tempo,'2:00'],
+      ['800 m',A.fast,'2:00'],
+      ['1 km allure course (S11)',A.race,'2:00']])+
+    '<h3 class="gh">Bien la faire</h3><ol class="gol">'+
+    '<li><b>Régularité</b> : la dernière répétition doit être à la même allure que la première. Si tu ralentis de plus de 10 s/km, arrête la séance là.</li>'+
+    '<li><b>Récup active</b> : trottine ou marche vite, ne t\'arrête pas complètement.</li>'+
+    '<li><b>Séances au temps</b> (S1 à S4) : appuie sur « Lancer les intervalles », le minuteur bipe le début et la fin de chaque effort.</li>'+
+    '<li><b>Séances à la distance</b> : saisis ton temps à chaque bloc, l\'app calcule ton allure réelle.</li>'+
+    '<li><b>Sur tapis</b> : mets 1 % de pente pour compenser l\'absence de vent.</li></ol>'
+  );
+
+  /* 6. jeudi */
+  h+=gsec('g-thu','06','Jeudi · Circuit stations',
+    gp('Les 7 stations enchaînées sans pause, puis 2:00 de repos avant le tour suivant. Objectif : apprendre la technique et tenir l\'effort, pas battre un record.')+
+    gtable(['Station','Volume','Charge à 100 %'],[
+      ['SkiErg','250 m','—'],['Sled push','2 × 25 m','152 kg'],['Sled pull','2 × 25 m','103 kg'],
+      ["Farmer's carry",'2 × 50 m','2 × 24 kg'],['Fentes lestées','25 m','sac 20 kg'],['Wall balls','20 reps','6 kg'],['Burpee broad jumps','20 m','—']])+
+    gtable(['Semaines','Tours','Charges'],[['1 à 4','3','70 %'],['5 à 8','4','85 %'],['9','5','100 %'],['10','3','100 %'],['11','2','100 %'],['12','1','100 %, léger']])+
+    gp('Saisis le temps de chaque tour : tu verras ta progression semaine après semaine. Les charges sled incluent le poids du traîneau, comme en course.')
+  );
+
+  /* 7. stations */
+  h+=gsec('g-st','07','Les 8 stations · technique',
+    gp('Dans l\'ordre de la course, avec les standards Open homme. Vérifie le règlement de Toulouse avant la course.')+
+    gex('g-ski','1 · SkiErg','1000 m · cible course ≈ 4:20',[
+      'Résistance (damper) sur 5 à 6.',
+      'Bras tendus au-dessus de la tête, tire vers le bas en pliant les hanches et légèrement les genoux, comme une charnière.',
+      'Les poignées finissent près des cuisses. Remonte en te redressant, bras tendus.',
+      'La puissance vient du buste et des jambes, pas seulement des bras.'],
+      ['Tirer uniquement avec les bras.','Coups trop rapides et courts.'],
+      'Vise des coups longs et puissants, environ 2:10 aux 500 m.')+
+    gex('g-push','2 · Sled push','50 m (4 × 12,5 m) · 152 kg',[
+      'Mains sur les montants, en bas, bras tendus ou légèrement fléchis.',
+      'Corps penché à environ 45°, dos plat.',
+      'Petits pas rapides en poussant avec l\'avant du pied, genoux qui avancent.',
+      'Ne t\'arrête pas : redémarrer un traîneau arrêté coûte beaucoup d\'énergie.'],
+      ['Grands pas lents.','Se redresser.'],'')+
+    gex('g-pull','3 · Sled pull','50 m (4 × 12,5 m) · 103 kg',[
+      'Reste derrière la ligne, face au traîneau, corde en main.',
+      'Tire main sur main, dos droit, en te penchant en arrière et en reculant d\'un pas pour utiliser ton poids et tes jambes.',
+      'Laisse la corde tomber devant toi, puis avance dans ta zone pour recommencer.'],
+      ['Tirer uniquement avec les bras, dos rond.'],
+      'Des gants fins aident beaucoup ici (renseigne-toi sur le règlement).')+
+    gex('g-bbj','4 · Burpee broad jumps','80 m',[
+      'Poitrine et cuisses touchent le sol.',
+      'Remonte en ramenant les pieds (sautés ou un par un, pour économiser).',
+      'Saute vers l\'avant pieds joints et atterris pieds joints.',
+      'Sauts moyens et réguliers (1,5 à 2 m), une respiration par répétition.'],
+      ['Sauter le plus loin possible dès le début : tu exploses à mi-parcours.'],
+      'Cible course : environ 4:30.')+
+    gex('g-rower','5 · Rameur','1000 m · cible ≈ 4:20',[
+      'Résistance sur 5 à 6, pieds bien sanglés.',
+      'Ordre à la tirée : jambes, puis buste, puis bras. Au retour : bras, buste, puis jambes.',
+      'Cadence de 26 à 30 coups par minute, environ 2:10 aux 500 m.'],
+      ['Tirer avec les bras avant de pousser avec les jambes.','Cadence trop élevée.'],'')+
+    gex('g-farm',"6 · Farmer's carry",'200 m · 2 × 24 kg',[
+      'Épaules basses et en arrière, gainage serré.',
+      'Pas courts et rapides, regard devant.',
+      'Évite de poser les kettlebells : chaque arrêt coûte du temps.'],
+      ['Épaules qui remontent vers les oreilles.'],
+      'Cible course : environ 1:30. Ta force de préhension est un atout ici.')+
+    gex('g-lunge','7 · Fentes lestées','100 m · sac 20 kg',[
+      'Sac posé sur les épaules, derrière la nuque.',
+      'Le genou arrière touche le sol à chaque fente.',
+      'Redresse-toi complètement (hanche tendue) avant le pas suivant.',
+      'Pas réguliers de taille moyenne, respiration à chaque fente.'],
+      ['Genou qui ne touche pas (répétition refusée en course).','Ne pas se redresser en haut.'],
+      'Cible course : environ 3:30.')+
+    gex('g-wb','8 · Wall balls','100 reps · 6 kg · cible à 3 m',[
+      'Ballon contre la poitrine, pieds largeur d\'épaules.',
+      'Squat avec la hanche sous le niveau du genou.',
+      'Lance en remontant, avec l\'élan des jambes, vers le centre de la cible.',
+      'Rattrape le ballon et enchaîne directement dans le squat suivant.'],
+      ['Squat trop haut (rep refusée).','Lancer avec les bras seulement.'],
+      '<b>Découpe dès le début</b> : par exemple 25-20-20-15-10 ou des séries de 15 avec 3 respirations entre chaque. Cible course : environ 5:30.')
+  );
+
+  /* 8. samedi */
+  h+=gsec('g-sat','08','Samedi · Séance spécifique',
+    '<h3 class="gh">Le « compromised run »</h3>'+
+    gp('C\'est courir juste après une station, les jambes et le souffle déjà entamés : exactement ce que tu vivras 8 fois en course. Les 200 premiers mètres sont toujours durs, puis ça se stabilise. Ne relance pas trop fort en sortie de station.')+
+    '<h3 class="gh">Les formats</h3><ol class="gol">'+
+    '<li><b>1 km + station</b> : tu cours la distance à l\'allure indiquée, puis tu enchaînes la station sans pause.</li>'+
+    '<li><b>Demi-station</b> : moitié de la distance ou des reps de course, avec la charge indiquée (ex. SkiErg 500 m, wall balls 50 reps).</li>'+
+    '<li><b>Récup</b> : le temps indiqué entre deux blocs, en marchant.</li></ol>'+
+    gp('Saisis le temps de course et le temps de station de chaque bloc pour comparer d\'une semaine à l\'autre.')+
+    '<div class="gex" id="g-emom"><h3>Stations intégrées au rythme (S6 et S7)</h3><div class="gmeta">30 ou 40 min de course continue</div><ol class="gol">'+
+    '<li>10 min d\'échauffement.</li>'+
+    '<li>Lance le chrono, cours à environ '+pace(1.1)+'/km.</li>'+
+    '<li>Toutes les 5 min (bip aigu) : stop, wall balls (12 en S6, 15 en S7), puis tu repars.</li>'+
+    '<li>Toutes les 10 min (bip grave) : wall balls + 20 m de burpee broad jumps.</li>'+
+    '<li>Le temps de station compte dans les 5 minutes : plus tu es lent, moins tu cours.</li></ol>'+
+    '<div class="gtip">Si tu dois ralentir sous '+pace(1.15)+'/km, retire 3 wall balls plutôt que de ralentir encore.</div></div>'+
+    '<div class="gex" id="g-test"><h3>Test 5 km (S1 et S8)</h3><ol class="gol">'+
+    '<li>Parcours plat ou piste, 15 min d\'échauffement + 4 lignes droites.</li>'+
+    '<li>Premier kilomètre à l\'allure que tu penses tenir, pas plus vite.</li>'+
+    '<li>Accélère sur le dernier kilomètre si tu peux.</li>'+
+    '<li>Saisis ton temps dans l\'app : toutes tes allures se recalculent.</li></ol></div>'+
+    '<div class="gex"><h3>Simulation complète (S10)</h3>'+gp('8 × (1 km + station) dans l\'ordre officiel, charges réelles, à 90 % de ton effort max. C\'est ta répétition générale : teste ton allure, ton découpage des wall balls et tes transitions.')+'</div>'
+  );
+
+  /* 9. dimanche */
+  h+=gsec('g-sun','09','Dimanche · Endurance fondamentale',
+    gp('Allure '+A.z2a+' à '+A.z2b+'/km, ou ~135-150 bpm. Si tu ne peux plus parler en phrases complètes, ralentis, quitte à marcher dans les côtes.')+
+    gp('C\'est la séance qui reconstruit ton moteur aérobie, abîmé par l\'arrêt de la course et le tabac. Elle paraît trop facile : c\'est voulu.')+
+    gp('<b>Alternative</b> en cas de gêne aux tibias ou aux genoux : même durée en rameur ou vélo, à la même intensité.')
+  );
+
+  /* 10. mobilité */
+  h+=gsec('g-mob','10','Mercredi et vendredi · Récup active',
+    gp('15 à 20 minutes de mobilité, puis 20 à 30 minutes de marche. Amplitude confortable, jamais forcée, respiration lente.')+
+    gex('g-mob1','1 · Chat-vache','1 min',['À quatre pattes, arrondis le dos en expirant, puis creuse-le en inspirant. 10 fois, lentement.'],null,'')+
+    gex('g-mob2','2 · Hanches 90/90','3 min',[
+      'Assis au sol, une jambe pliée devant toi à 90°, l\'autre pliée sur le côté à 90°.',
+      'Bascule les deux genoux d\'un côté à l\'autre, 10 fois, sans t\'aider des mains si possible.',
+      'Puis reste 30 s penché au-dessus du tibia avant, dos droit, de chaque côté.'],null,
+      'Ça ouvre les hanches pour les fentes et la foulée.')+
+    gex('g-mob3','3 · Fente basse','2 min',[
+      'Genou arrière au sol, pied avant devant.',
+      'Rentre le bassin (fesses serrées) et avance doucement la hanche.',
+      'Lève le bras du côté du genou au sol. 45 s par côté.'],null,
+      'Étire les fléchisseurs de hanche, raccourcis par la position assise au bureau.')+
+    gex('g-mob4','4 · Chevilles et mollets','3 min',[
+      '<b>Genou au mur</b> : pied à environ 10 cm d\'un mur, pousse le genou pour toucher le mur sans décoller le talon. 10 fois par côté.',
+      '<b>Mollet sur une marche</b> : avant du pied sur la marche, laisse descendre le talon. 30 s par côté.'],null,
+      'Des chevilles mobiles protègent tes tibias et améliorent ta foulée et tes squats de wall balls.')+
+    gex('g-thor','5 · Thoracique (haut du dos)','4 min',[
+      '<b>Open book</b> : allongé sur le côté, genoux pliés à 90°, bras tendus devant toi. Ouvre le bras du dessus vers l\'arrière en suivant ta main des yeux, en expirant. 8 par côté.',
+      '<b>Extension sur rouleau</b> : rouleau de massage en travers du haut du dos, mains derrière la tête, fesses au sol. Penche-toi en arrière par-dessus le rouleau 5 fois, puis décale-le de 3 cm vers le haut. 3 positions.',
+      '<b>Thread the needle</b> : à quatre pattes, passe un bras sous ton corps, puis ouvre-le vers le plafond. 8 par côté.'],null,
+      '<b>Pourquoi</b> : un haut du dos mobile te garde droit en fin de course, facilite la position des wall balls au-dessus de la tête et améliore ta tirée au SkiErg et au rameur. Pas de rouleau : fais l\'extension allongé sur le dos, une serviette roulée sous les omoplates.')+
+    gex('g-walk','6 · Marche','20 à 30 min',['Marche tranquille, à l\'extérieur si possible. Elle accélère la récupération sans fatigue.'],null,'')
+  );
+
+  /* 11. course */
+  h+=gsec('g-race','11','Le jour de la course',
+    '<h3 class="gh">La veille</h3><ol class="gol"><li>Repas riche en glucides (pâtes, riz), sans excès de gras.</li><li>Bois régulièrement, couche-toi tôt.</li><li>Prépare tout : tenue, chaussures de running avec du grip, gants, pièce d\'identité.</li></ol>'+
+    '<h3 class="gh">Le matin</h3><ol class="gol"><li>Petit-déjeuner 3 h avant le départ : flocons d\'avoine ou riz, banane, miel.</li><li>Petite collation 45 min avant si tu as faim.</li><li>Arrive 1 h avant ta vague.</li><li>Échauffement 15 min : footing, gammes, 3 lignes droites, 10 wall balls si possible.</li></ol>'+
+    '<h3 class="gh">Pendant</h3><ol class="gol"><li>Premier km à 5:20/km, puis 5:15/km.</li><li>Dans la Roxzone (zone de transition), marche vite ou trottine pour récupérer.</li><li>Ne sprinte jamais en sortie de station.</li><li>Wall balls : suis le découpage prévu dès la première série.</li></ol>'+
+    gtable(['Station','Cible'],[['SkiErg','4:20'],['Sled push','2:40'],['Sled pull','3:30'],['Burpee broad jumps','4:30'],['Rameur','4:20'],["Farmer's carry",'1:30'],['Fentes lestées','3:30'],['Wall balls','5:30']])
+  );
+
+  /* 12. récup */
+  h+=gsec('g-rec','12','Récupération et nutrition',
+    gtable(['Levier','Cible'],[
+      ['Sommeil','7 h 30 minimum'],
+      ['Protéines','145 à 160 g par jour (1,8 à 2 g × 80 kg)'],
+      ['Glucides','Plus les jours de séance dure, notamment avant'],
+      ['Eau','2 à 3 L par jour, plus quand tu transpires']])+
+    '<h3 class="gh">Signaux pour alléger</h3><ol class="gol">'+
+    '<li>Pouls au réveil plus haut de 7 bpm ou plus plusieurs matins d\'affilée.</li>'+
+    '<li>Jambes lourdes sur 3 séances de suite, ou sommeil dégradé.</li>'+
+    '<li>Dans ce cas, remplace la séance qualité par du Z2 ou du repos.</li></ol>'+
+    gp('<b>Douleur au tibia localisée</b>, qui fait mal au toucher : arrête la course 3 à 5 jours, garde le rameur ou le vélo, et consulte si ça persiste.')
+  );
+
+  /* 13. glossaire */
+  h+=gsec('g-glo','13','Glossaire',
+    gtable(['Terme','Signification'],[
+      ['Z2','Zone 2, endurance fondamentale : effort facile où tu peux parler.'],
+      ['Seuil','Allure tenable environ 1 h. Dur mais contrôlé.'],
+      ['Tempo','Effort soutenu proche du seuil, sur quelques minutes.'],
+      ['RPE','Effort ressenti, de 1 à 10.'],
+      ['Compromised run','Course juste après une station, sur jambes fatiguées.'],
+      ['Demi-station','Station à la moitié de la distance ou des reps de course.'],
+      ['Roxzone','Zone de transition entre course et stations.'],
+      ['Gammes','Exercices éducatifs de course : montées de genoux, talons-fesses…'],
+      ['Ligne droite','Accélération progressive sur 80 m.'],
+      ['Décharge','Semaine allégée pour assimiler l\'entraînement.'],
+      ['Affûtage','Baisse de volume avant la course pour arriver frais.'],
+      ['Damper','Réglage de résistance du SkiErg et du rameur.'],
+      ['Open / Pro','Catégories Hyrox : Open a des charges plus légères que Pro.']])
+  );
+  h+='<div class="noprint" style="margin:18px 0 8px"><button class="btn ghost sm" data-a="gprint" style="width:100%">Exporter le guide en PDF</button></div>';
+  return h;
+}
+function guideFor(s){
+  return ({force:'g-force',circuit:'g-thu',emom:'g-emom',z2:'g-sun',test:'g-test',race:'g-race'})[s.type]
+    ||(s.type==='reps'?(s.kind==='q'?'g-tue':'g-sat'):(s.day==='mer'||s.day==='ven'?'g-mob':'g-start'));
+}
+function gotoGuide(id,ret){
+  UI.tab='guide';UI.gReturn=ret||null;UI.sess=null;
+  var el=null;
+  ['g-start','g-int','g-warm','g-force','g-tue','g-thu','g-st','g-sat','g-sun','g-mob','g-race','g-rec','g-glo'].forEach(function(s){if(id===s)UI.gOpen[s]=true;});
+  var parent={'g-dl':'g-force','g-bss':'g-force','g-pu':'g-force','g-inc':'g-force','g-row':'g-force','g-core':'g-force','g-ski':'g-st','g-push':'g-st','g-pull':'g-st','g-bbj':'g-st','g-rower':'g-st','g-farm':'g-st','g-lunge':'g-st','g-wb':'g-st','g-emom':'g-sat','g-test':'g-sat','g-thor':'g-mob'}[id];
+  if(parent)UI.gOpen[parent]=true;
+  saveUI();render();
+  el=document.getElementById(id);
+  if(el){$main.scrollTop=Math.max(0,el.getBoundingClientRect().top-$main.getBoundingClientRect().top+$main.scrollTop-12);}
+}
+
 /* --- réglages --- */
 function sw(id,on,label){return '<div class="sw"><button class="'+(on?'on':'')+'" data-a="sw" data-id="'+id+'" aria-label="'+esc(label)+'" aria-pressed="'+(on?'true':'false')+'"></button><span>'+esc(label)+'</span></div>';}
 function vSettings(){
@@ -907,14 +1267,15 @@ function tabs(){
     today:'<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
     weeks:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
     prog:'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>',
+    guide:'<svg viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2.5 2.5 0 0 0-2.5-2.5H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2.5 2.5 0 0 1 2.5-2.5H21z"/></svg>',
     set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>'
   };
-  var t=[['today','Aujourd\'hui'],['weeks','Semaines'],['prog','Progrès'],['set','Réglages']];
+  var t=[['today','Aujourd\'hui'],['weeks','Semaines'],['prog','Progrès'],['guide','Guide'],['set','Réglages']];
   document.getElementById('tabs').innerHTML=t.map(function(x){return '<button class="'+(UI.tab===x[0]&&!UI.sess?'on':'')+'" data-a="tab" data-t="'+x[0]+'">'+ic[x[0]]+'<span>'+x[1]+'</span></button>';}).join('');
 }
 function renderMain(){
   var key=UI.sess?'s:'+UI.sess:UI.tab,sc=$main.scrollTop;
-  var h=UI.sess?vSession():(UI.tab==='today'?vToday():UI.tab==='weeks'?vWeeks():UI.tab==='prog'?vProgress():vSettings());
+  var h=UI.sess?vSession():(UI.tab==='today'?vToday():UI.tab==='weeks'?vWeeks():UI.tab==='prog'?vProgress():UI.tab==='guide'?vGuide():vSettings());
   $main.innerHTML=h;
   if(key!==viewKey){$main.scrollTop=0;viewKey=key;if(UI.tab==='weeks'&&!UI.sess){var c=document.getElementById('wk'+curWeek());if(c)$main.scrollTop=Math.max(0,c.offsetTop-70);}}
   else $main.scrollTop=sc;
@@ -926,7 +1287,11 @@ function renderSoft(){var a=document.activeElement;if(a&&(a.tagName==='INPUT'||a
 function act(a,el){
   var l;
   switch(a){
-    case 'tab':UI.tab=el.dataset.t;UI.sess=null;saveUI();render();break;
+    case 'tab':UI.tab=el.dataset.t;UI.sess=null;UI.gReturn=null;saveUI();render();break;
+    case 'guide':gotoGuide(el.dataset.g,UI.sess);break;
+    case 'gjump':gotoGuide(el.dataset.g,UI.gReturn);break;
+    case 'gback':UI.sess=UI.gReturn;UI.gReturn=null;saveUI();render();break;
+    case 'gprint':document.querySelectorAll('details.gsec').forEach(function(d){d.open=true;});try{window.print();}catch(e){toast('Utilise Partager puis Imprimer');}break;
     case 'open':UI.sess=el.dataset.k;saveUI();wake();render();break;
     case 'back':UI.sess=null;saveUI();if(!T)unwake();render();break;
     case 'wk':var n=parseInt(el.dataset.w,10),cur=UI.open[n]!=null?UI.open[n]:(n===curWeek());UI.open[n]=!cur;saveUI();render();break;
@@ -975,6 +1340,8 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){
   var el=e.target;if(el.dataset&&(el.dataset.rr||(el.dataset.f&&el.dataset.f.indexOf('set.')===0)))render();
 });
+document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.classList&&d.classList.contains('gsec')){UI.gOpen[d.id]=d.open;saveUI();}},true);
+window.addEventListener('beforeprint',function(){document.querySelectorAll('details.gsec').forEach(function(d){d.open=true;});});
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'){
     if(T){scheduleAudio();wake();tick();}
@@ -991,7 +1358,7 @@ document.addEventListener('pointerdown',function(){
 /* ---------- démarrage ---------- */
 load();
 render();
-try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}
+try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(function(){});var hadCtl=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',function(){if(!hadCtl){hadCtl=true;return;}if(T){toast('Mise à jour prête : rouvre l\'app après ta séance');return;}location.reload();});}catch(e){}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 if(T){ensureTick();}
 initRemote();
